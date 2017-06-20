@@ -25,6 +25,19 @@ public class Hero{
 	{
 		id=_id;
 	}
+	public Hero(Hero h)
+	{
+		id = h.id;
+		name = h.name;
+		hp = h.hp;
+		atk = h.atk;
+		def = h.def;
+		spd = h.spd;
+		all = h.all;
+		win = h.win;
+		per = h.per;
+	}
+
 	public Hero GetHero(int lv)
 	{
 		Hero h = new Hero();	
@@ -57,7 +70,13 @@ public class HeroInBattle
 
 	public HeroInBattle(Hero _hero)
 	{
-		hero = _hero;
+		hero = new Hero(_hero);
+		ResetStatus();
+	}
+
+	public HeroInBattle(HeroInBattle _hero)
+	{
+		hero = new Hero(_hero.hero);
 		ResetStatus();
 	}
 
@@ -86,7 +105,16 @@ public class Team{
 		heros = new List<HeroInBattle>();
 		heros = a.heros;
 		team  = a.team;
+	}
 
+	public void SetTeam(Team teamB)
+	{
+		team = teamB.team;
+		heros = new List<HeroInBattle>();
+		foreach(HeroInBattle hero in teamB.heros)
+		{
+			heros.Add(new HeroInBattle(hero));
+		}
 	}
 
 	public void SetTeam(TeamEnum _team)
@@ -289,10 +317,8 @@ public class MainClass : MonoBehaviour {
 		Team teamDefault =new Team();
 		teamDefault.DefaultTeam(heroDefaul);
 		teamDefault.SetTeam(TeamEnum.teamB);
-		Team teamTrain = new Team();
-		teamTrain = teamA;
-		Team bestTeam = new Team();
-		bestTeam = teamA;
+		Team teamTrain = new Team(teamA);
+		Team bestTeam = new Team(teamA);
 		for(int i=0;i<Mathf.Pow(6,6);i++)
 		{
 			int[] a = new int[6];
@@ -307,12 +333,12 @@ public class MainClass : MonoBehaviour {
 				a[1]!=a[5] && a[2]!=a[3] && a[2]!=a[4] && a[2]!=a[5] && 
 				a[3]!=a[4] && a[3]!=a[5] && a[4]!=a[5])
 			{
-				teamTrain.heros[0] = teamA.heros[a[0]];
-				teamTrain.heros[1] = teamA.heros[a[1]];
-				teamTrain.heros[2] = teamA.heros[a[2]];
-				teamTrain.heros[3] = teamA.heros[a[3]];
-				teamTrain.heros[4] = teamA.heros[a[4]];
-				teamTrain.heros[5] = teamA.heros[a[5]];
+				teamTrain.heros[0] = new HeroInBattle(teamA.heros[a[0]]);
+				teamTrain.heros[1] = new HeroInBattle(teamA.heros[a[1]]);
+				teamTrain.heros[2] = new HeroInBattle(teamA.heros[a[2]]);
+				teamTrain.heros[3] = new HeroInBattle(teamA.heros[a[3]]);
+				teamTrain.heros[4] = new HeroInBattle(teamA.heros[a[4]]);
+				teamTrain.heros[5] = new HeroInBattle(teamA.heros[a[5]]);
 				while( Battle(teamTrain,teamDefault) == TeamEnum.teamA) 
 				{
 					teamTrain.ResetStatus();
