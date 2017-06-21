@@ -2,25 +2,35 @@
 using System.Collections.Generic;
 using UnityEngine;
 [System.Serializable]
-public class ParentList
+public class Parent
 {
-	public ChildRent a;
+	public Child a;
 }
 [System.Serializable]
-public class ChildRent
+public class Child
 {
 	public int n;
+
+	public Child()
+	{
+	}
+
+	public Child(Child c)
+	{
+		n = c.n;
+	}
+
 }
 
 public class TestClass : MonoBehaviour {
-	public ParentList pl1;
-	public ParentList pl2;
+	public Child c1;
+	public Child c2;
 	// Use this for initialization
 	void Start () {
-		pl1.a.n=2;
-		pl2.a  = new ChildRent();
-		pl2.a = pl1.a;
-		pl2.a.n=1;
+		c1 = new Child();
+		c1.n = 2;
+		c2 = new Child(c1);
+		c2.n = 3;
 	}
 	
 	// Update is called once per frame

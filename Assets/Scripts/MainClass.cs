@@ -78,11 +78,13 @@ public class HeroInBattle
 	{
 		hero = new Hero(_hero.hero);
 		ResetStatus();
+		status.team = _hero.status.team;
 	}
 
 	public void ResetStatus()
 	{
-		status = new HeroStatus();
+		if(status==null)
+			status = new HeroStatus();
 		status.hp = hero.hp;
 		status.isDead = false;
 		status.pow = 50;
@@ -102,9 +104,12 @@ public class Team{
 
 	public Team (Team a)
 	{
-		heros = new List<HeroInBattle>();
-		heros = a.heros;
 		team  = a.team;
+		heros = new List<HeroInBattle>();
+	//	heros = a.heros;
+		foreach(HeroInBattle h in a.heros)
+			heros.Add(new HeroInBattle(h));
+		SetTeam(team);
 	}
 
 	public void SetTeam(Team teamB)
@@ -121,7 +126,7 @@ public class Team{
 	{
 		team = _team;
 		foreach(HeroInBattle hero in heros)
-			hero.status.team = _team;
+			hero.status.team = team;
 	}
 
 	public void ResetStatus()
@@ -160,7 +165,9 @@ public class Team{
 	public void Print()
 	{
 		foreach(HeroInBattle h in heros)
-			Debug.Log(h.status.ToString());	
+		{
+			Debug.Log(h.status.ToString() + team);	
+		}
 	}
 }
 
@@ -209,13 +216,19 @@ public class MainClass : MonoBehaviour {
 			LoadDefineValue(sheets["define"]);
 			InitAllHeroes(sheets["heros"]);
 			Print(System.DateTime.Now.ToString(),1);
-			for(int i=0;i<10;i++)
+			for(int i=0;i<200;i++)
 			{
-				Print("Battle "+i,2);
+				//Print("Battle "+i,2);
 				ResetBattle();
 				InitTeam();
-				teamA = TrainningTeam(teamA);
-				teamB = TrainningTeam(teamB);
+				teamA=TrainningTeam2(teamA);
+				//PrintName(teamA,99);
+				teamB=TrainningTeam2(teamB);
+				//PrintName(teamB,99);
+
+
+//				teamA = TrainningTeam(teamA);
+//				teamB = TrainningTeam(teamB);
 				teamB.SetTeam(TeamEnum.teamB);
 				TeamEnum teamwin = Battle(teamA,teamB);
 				AddData(teamwin);
@@ -305,18 +318,113 @@ public class MainClass : MonoBehaviour {
 //		teamB.team = TeamEnum.teamB;
 	}
 
+	public Team TrainningTeam2(Team teamA)
+	{
+		//teamA -> temp
+		//temp move a hero to teamA
+		//if(
+//		for(int i =0;i< teamA.heros.Count ; i++)
+//		{
+//			HeroInBattle h = teamA.heros[i];
+//			teamA.heros.RemoveAt(i);
+//
+//		}
+
+		Team bestTeam = new Team();
+		bestTeam = new Team(teamA);
+
+		Team teamTemp = new Team();
+		teamTemp = new Team(teamA);
+		teamA = new Team();
+		teamA.SetTeam(teamTemp.team);
+		int lv = 70;
+		//PrintCheckTime("TrainningTeam3  :  ");
+		TrainningTeam3(teamA,teamTemp,ref bestTeam,ref lv);
+	//	PrintCheckTime("else thing  :  ");
+		teamA = bestTeam;
+		//Debug.Log("best team is:");
+		//PrintName(teamA,lv);
+		//PrintName(bestTeam,lv);
+		return bestTeam;
+	}
+	Team wtfteam;
+	public void PrintName(Team a,int lv)
+	{
+		Debug.Log("team lv"+lv);
+		foreach(HeroInBattle h in a.heros)
+			Debug.LogFormat("name:{0}  hp:{1}  atk:{2}", h.hero.name,h.hero.hp,h.hero.atk);
+	}
+
+	public void TrainningTeam3(Team teamA,Team teamTemp,ref Team bestTeam,ref int lv)
+	{
+		if(teamA.heros.Count >=6)
+		{
+			//start battle
+			TeamEnum enemyTeam = TeamEnum.teamB;
+			if(teamA.team == TeamEnum.teamB)
+				enemyTeam = TeamEnum.teamA;
+			Hero heroDefaul=heros[0].GetHero(lv);
+			Team teamDefault =new Team();
+			teamDefault.DefaultTeam(heroDefaul);
+			teamDefault.SetTeam(enemyTeam);
+
+			while( Battle(teamA,teamDefault) == teamA.team) 
+			{
+				//Debug.Log("-----------------------------------------------");
+				//PrintName(teamA,lv);
+
+
+
+				teamA.ResetStatus();
+				bestTeam  = new Team(teamA);
+				//PrintName(bestTeam,lv);
+				lv++;
+				heroDefaul=heros[0].GetHero(lv);
+				teamDefault.DefaultTeam(heroDefaul);
+				teamDefault.SetTeam(enemyTeam);
+				teamDefault.ResetStatus();
+//
+//				if(lv>1000)
+//				{
+//					Debug.Log("<color=#ff0000>wrong something</color>");
+//					break;
+//				}
+
+			}
+		}
+		else 
+		{
+			for(int i = 0 ; i < teamTemp.heros.Count; i++)
+			{
+				teamA.heros.Add(teamTemp.heros[i]);
+				List<HeroInBattle> tempList = new List<HeroInBattle>();
+				foreach(HeroInBattle h in teamTemp.heros)
+					tempList.Add(h);
+				teamTemp.heros.RemoveAt(i);
+				TrainningTeam3(teamA,teamTemp,ref bestTeam,ref lv);
+				teamTemp.heros = tempList;
+				teamA.heros.RemoveAt(teamA.heros.Count-1);
+			}
+		}
+
+	}
+
+
 	public Team TrainningTeam(Team teamA)
 	{
-		teamA.SetTeam(TeamEnum.teamA);
+		TeamEnum enemyTeam = TeamEnum.teamB;
+		if(teamA.team == TeamEnum.teamB)
+			enemyTeam = TeamEnum.teamA;
+
 		//fight with default team lv...
 		//lv 92
 		//lv 100
 		//lv 108
-		int lv=100;
+		int lv=70;
 		Hero heroDefaul=heros[0].GetHero(lv);
 		Team teamDefault =new Team();
 		teamDefault.DefaultTeam(heroDefaul);
-		teamDefault.SetTeam(TeamEnum.teamB);
+		teamDefault.SetTeam(enemyTeam);
 		Team teamTrain = new Team(teamA);
 		Team bestTeam = new Team(teamA);
 		for(int i=0;i<Mathf.Pow(6,6);i++)
@@ -339,39 +447,57 @@ public class MainClass : MonoBehaviour {
 				teamTrain.heros[3] = new HeroInBattle(teamA.heros[a[3]]);
 				teamTrain.heros[4] = new HeroInBattle(teamA.heros[a[4]]);
 				teamTrain.heros[5] = new HeroInBattle(teamA.heros[a[5]]);
-				while( Battle(teamTrain,teamDefault) == TeamEnum.teamA) 
+				while( Battle(teamTrain,teamDefault) == teamA.team) 
 				{
+					if(lv>=1000)
+					{
+						//Debug.Log("BEFOR COMBAT");
+						//teamDefault.Print();
+						//teamTrain.Print();
+					}
 					teamTrain.ResetStatus();
 					bestTeam  = new Team(teamTrain);
-					lv+=1000;
+					lv+=1;
 					heroDefaul=heros[0].GetHero(lv);
 					teamDefault.DefaultTeam(heroDefaul);
-					teamDefault.SetTeam(TeamEnum.teamB);
+					teamDefault.SetTeam(enemyTeam);
 					teamDefault.ResetStatus();
-//					teamDefault.Print();
-//					teamTrain.Print();
+					if(lv>1000)
+					{
+						//Debug.Log("AFTER COMBAT");
+						//teamDefault.Print();
+						//teamTrain.Print();
+						break;
+					}
+				//	teamDefault.Print();
+				//	teamTrain.Print();
+
 				}
 				{
 					teamTrain.ResetStatus();
+					//teamDefault.SetTeam(TeamEnum.teamB);
 					teamDefault.ResetStatus();
-//					teamDefault.Print();
-//					teamTrain.Print();
+				//	teamDefault.Print();
+				//	teamTrain.Print();
 				}
 			
 			}
 		}
-		Debug.Log("lv"+lv);
-		Debug.Log(bestTeam.heros[0].hero.name);
-		Debug.Log(bestTeam.heros[1].hero.name);
-		Debug.Log(bestTeam.heros[2].hero.name);
-		Debug.Log(bestTeam.heros[3].hero.name);
-		Debug.Log(bestTeam.heros[4].hero.name);
-		Debug.Log(bestTeam.heros[5].hero.name);
+//		Debug.Log("lv"+lv);
+//		Debug.Log(bestTeam.heros[0].hero.name);
+//		Debug.Log(bestTeam.heros[1].hero.name);
+//		Debug.Log(bestTeam.heros[2].hero.name);
+//		Debug.Log(bestTeam.heros[3].hero.name);
+//		Debug.Log(bestTeam.heros[4].hero.name);
+//		Debug.Log(bestTeam.heros[5].hero.name);
 		return bestTeam;
 	}
 
 	public TeamEnum Battle(Team teamA,Team teamB)
 	{
+		//PrintCheckTime("start");
+		teamA.ResetStatus();
+		teamB.ResetStatus();
 		List<HeroInBattle> sortSpd = new List<HeroInBattle>();
 		for(int i=0;i<6;i++)
 		{
@@ -385,10 +511,10 @@ public class MainClass : MonoBehaviour {
 
 		for(int i=0;i<11;i++)
 		{
-			if(sortSpd[i].hero.id==3)
-			{
-				Print("tracking");
-			}
+//			if(sortSpd[i].hero.id==3)
+//			{
+//				Print("tracking");
+//			}
 			for(int j=i+1;j<12;j++)
 			{
 				if(sortSpd[i].hero.spd<sortSpd[j].hero.spd)
@@ -410,17 +536,17 @@ public class MainClass : MonoBehaviour {
 				{
 					HeroInBattle heroDef = null;
 					Team teamDef = null;
-					if(heroAtt.status.team == TeamEnum.teamA)
+					if(heroAtt.status.team == teamA.team)
 						teamDef = teamB;
 					else 
 						teamDef = teamA;
 					heroDef = teamDef.GetFirstHeroIsLive();
-					if(heroAtt==null || heroDef==null)
-					{
-						Print("turn "+i.ToString() +"   "+j.ToString()+"   "+heroAtt.status.team,1);
-						teamA.Print();
-						teamB.Print();
-					}
+//					if(heroAtt==null || heroDef==null)
+//					{
+//						//Print("turn "+i.ToString() +"   "+j.ToString()+"   "+heroAtt.status.team,1);
+//						teamA.Print();
+//						teamB.Print();
+//					}
 					if(heroAtt.status.pow>=100)
 					{
 						heroDef.status.hp -= Mathf.Max((heroAtt.hero.atk*2-heroDef.hero.def),0);
@@ -438,7 +564,7 @@ public class MainClass : MonoBehaviour {
 					}
 					else
 					{
-							heroDef.status.hp -= Mathf.Max((heroAtt.hero.atk-heroDef.hero.def),0);
+						heroDef.status.hp -= Mathf.Max((heroAtt.hero.atk-heroDef.hero.def),0);
 						heroDef.status.pow+=10;
 						heroAtt.status.pow+=50;
 						if(heroDef.status.hp <=0)
@@ -446,7 +572,8 @@ public class MainClass : MonoBehaviour {
 							heroDef.status.isDead = true;
 							if(teamDef.IsDeadAll())
 							{
-								Print (heroAtt.status.team.ToString() + "is win in turn "+i.ToString(),3);
+							//	Print (heroAtt.status.team.ToString() + "is win in turn "+i.ToString(),3);
+
 								return heroAtt.status.team;
 							}
 						}
@@ -464,8 +591,9 @@ public class MainClass : MonoBehaviour {
 			//..
 			//reset
 		}
-		Print("Draw battle, team B win",3);
-		return TeamEnum.teamB;
+	//	Print("Draw battle, team B win",3);
+
+		return teamB.team;
 	}
 
 
@@ -509,6 +637,13 @@ public class MainClass : MonoBehaviour {
 	{
 		if(loglv>=_loglv)
 			Debug.Log(s);
+	}
+
+	//string defaultMess = "Start Time: ";
+	void PrintCheckTime(string s = "TIME: ")
+	{
+		Debug.Log("<b>"+s + System.DateTime.Now.Millisecond+"</b>");
+	//	defaultMess = s;
 	}
 }
 
