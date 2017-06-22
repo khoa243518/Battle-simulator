@@ -549,7 +549,7 @@ public class MainClass : MonoBehaviour {
 //					}
 					if(heroAtt.status.pow>=100)
 					{
-						heroDef.status.hp -= Mathf.Max((heroAtt.hero.atk*2-heroDef.hero.def),0);
+						heroDef.status.hp -= Mathf.Max((heroAtt.hero.atk*2/(heroDef.hero.def/100)),0);
 						heroDef.status.pow+=10;
 						heroAtt.status.pow=0;
 						if(heroDef.status.hp <=0)
@@ -564,7 +564,7 @@ public class MainClass : MonoBehaviour {
 					}
 					else
 					{
-						heroDef.status.hp -= Mathf.Max((heroAtt.hero.atk-heroDef.hero.def),0);
+						heroDef.status.hp -= Mathf.Max((heroAtt.hero.atk/(heroDef.hero.def/100)),0);
 						heroDef.status.pow+=10;
 						heroAtt.status.pow+=50;
 						if(heroDef.status.hp <=0)
